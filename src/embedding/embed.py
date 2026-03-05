@@ -58,9 +58,7 @@ def upsert_chunks(
     batch_size: int = BATCH_SIZE
 ):
     """
-    Upsert chunk records into Pinecone.
-
-    Expected chunk structure:
+    chunk structure:
     {
         "id": "child-1",
         "chunk_text": "...",
@@ -80,11 +78,13 @@ def upsert_chunks(
             "chunk_text": chunk["chunk_text"],
             "source": chunk["source"],
             "page": chunk.get("page"),
-            "parent_id": chunk["parent_id"],
+            "parent_id": chunk.get("parent_id"),
             "source_hash_value": chunk["source_hash_value"],
             "document_id": document_id
         }
 
+        # Pinecone does not accept null variables in metadata
+        record = {k: v for k, v in record.items() if v is not None}
         records.append(record)
 
     # batch upsert

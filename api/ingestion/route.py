@@ -7,8 +7,9 @@ import uuid
 from datetime import datetime
 from api.ingestion.services import get_current_user
 from src.embedding.embed import upsert_chunks
-from src.chunking.parent_child import ingest
-from src.config import document_collection
+from src.chunking.parent_child import ingest as parent_child_ingest
+from src.chunking.recursive_character import ingest as recursive_character_ingest
+from src.config import document_collection, CHUNKING_STRATEGY
 from pathlib import Path
 import shutil
 
@@ -39,8 +40,11 @@ async def upload_document(
 
     namespace = username
 
-    # Run chunking
-    records, parents = ingest(file_path)
+    # Run chunking based on strategy
+    if CHUNKING_STRATEGY == "recursive_character":
+        records = recursive_character_ingest(file_path)
+    else:
+        records, parents = parent_child_ingest(file_path)
     source_hash = records[0]["source_hash_value"]
 
     # Check for existing document in MongoDB

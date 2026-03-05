@@ -1,6 +1,6 @@
 # devRAG — Retrieval-Augmented Generation System
 
-A modular RAG system built with **FastAPI**, **MongoDB Atlas**, and **Pinecone** that supports user-authenticated document ingestion with parent-child chunking and automated version control.
+A modular RAG system built with **FastAPI**, **MongoDB Atlas**, and **Pinecone** that supports user-authenticated document ingestion with configurable chunking strategies (Parent-Child & Recursive Character) and automated version control.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ flowchart TB
 
     subgraph CORE["src/ modules"]
         CONFIG["config.py ✅"]
-        CHUNK["chunking/parent_child.py ✅"]
+        CHUNK["chunking/ ✅"]
         EMBED["embedding/embed.py ✅"]
         CACHE["caching/ 🔲"]
         RET["retrieval/ ✅"]
@@ -69,7 +69,7 @@ flowchart TB
 | User registration & login (MongoDB) | ✅ |
 | JWT authentication (HTTPBearer) | ✅ |
 | File upload (PDF, TXT) | ✅ |
-| Parent-child document chunking | ✅ |
+| Configurable document chunking (Recursive/Parent-Child) | ✅ |
 | **Document Versioning & Archiving** | ✅ |
 | Pinecone vector upsert with metadata filtering | ✅ |
 | Duplicate document detection (SHA256) | ✅ |
@@ -108,7 +108,7 @@ flowchart TB
 │   └── generation/          # Query & Answer generation
 ├── src/
 │   ├── config.py            # MongoDB & Pinecone setup
-│   ├── chunking/            # Parent-child splitting logic
+│   ├── chunking/            # Configurable splitting logic (Parent-Child / Recursive Character)
 │   ├── embedding/           # Pinecone indexing
 │   ├── retrieval/           # Filtered retrieval & reranking
 │   └── generation/          # Groq LLM integration

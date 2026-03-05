@@ -72,9 +72,9 @@ def children_splitter(
 
 # Parent -> Child Mapping
 
-def create_parent_child_mapping(parent_chunks: List[Document]):
+def create_parent_child_mapping(parent_chunks: List[Document], hash_val: str):
     for idx, chunk in enumerate(parent_chunks):
-        chunk.metadata["parent_id"] = f"Parent-{idx+1}"
+        chunk.metadata["parent_id"] = f"{hash_val}-parent-{idx+1}"
     child_chunks = children_splitter(
         parent_chunks,
         CHILD_CHUNK_SIZE,
@@ -89,18 +89,18 @@ def create_parent_child_mapping(parent_chunks: List[Document]):
 def parent_store(parent_chunks: List[Document]) -> Dict[str, str]:
     store = {}
     for idx, pchunk in enumerate(parent_chunks):
-        store[f"Parent-{idx+1}"] = pchunk.page_content
+        store[pchunk.metadata["parent_id"]] = pchunk.page_content
     return store
 
 
 # Create Child Records
 
-def create_child_records(child_chunks: List[Document]) -> List[Dict]:
+def create_child_records(child_chunks: List[Document], hash_val: str) -> List[Dict]:
     records = []
     for idx, chunk in enumerate(child_chunks):
         records.append(
             {
-                "_id": f"child-{idx+1}",
+                "_id": f"{hash_val}-chunk-{idx+1}",
                 "chunk_text": chunk.page_content,
                 "parent_id": chunk.metadata["parent_id"],
                 "source": Path(chunk.metadata["source"]).name,
@@ -124,9 +124,9 @@ def ingest(file_path: Path):
         chunk_overlap=PARENT_CHUNK_OVERLAP,
     )
 
-    parent_chunks, child_chunks = create_parent_child_mapping(parent_chunks)
+    parent_chunks, child_chunks = create_parent_child_mapping(parent_chunks, hash_val)
     parents = parent_store(parent_chunks)
-    records = create_child_records(child_chunks)
+    records = create_child_records(child_chunks, hash_val)
     for r in records:
         r["source_hash_value"] = hash_val
         r["source"] = file_name

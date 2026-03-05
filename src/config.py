@@ -37,11 +37,20 @@ TOP_K : int = int(os.getenv("TOP_K", 10))
 TOP_N : int = int(os.getenv("TOP_N", 5))
 
 
-# Chunking
+# Chunking Strategy
+# Options: "recursive_character", "parent_child"
+CHUNKING_STRATEGY : str = os.getenv("CHUNKING_STRATEGY", "recursive_character")
+
+# Parent Child Chunking
 PARENT_CHUNK_SIZE : int = int(os.getenv("PARENT_CHUNK_SIZE", 1000))
 PARENT_CHUNK_OVERLAP : int = int(os.getenv("PARENT_CHUNK_OVERLAP", 200))
 CHILD_CHUNK_SIZE : int = int(os.getenv("CHILD_CHUNK_SIZE", 200))
 CHILD_CHUNK_OVERLAP : int = int(os.getenv("CHILD_CHUNK_OVERLAP", 20))
+
+
+# Recursive Character Chunking
+CHUNK_SIZE : int = int(os.getenv("CHUNK_SIZE", 512))
+CHUNK_OVERLAP : int = int(os.getenv("PARENT_CHUNK_SIZE", 100))
 
 # LLM (Groq)
 GROQ_API_KEY : str = os.getenv("GROQ_API_KEY")

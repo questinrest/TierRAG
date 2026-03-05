@@ -7,7 +7,7 @@ This project implements a Retrieval-Augmented Generation (RAG) system with:
 - ✅ User registration & login (MongoDB)
 - ✅ JWT-based authentication (HTTPBearer)
 - ✅ Namespace isolation in Pinecone (per-user)
-- ✅ Parent-child document chunking
+- ✅ Configurable document chunking (Recursive Character & Parent-Child)
 - ✅ Automated document versioning & archiving (MongoDB)
 - 🔲 Multi-tier caching (Exact, Semantic, Retrieval)
 - ✅ Retrieval with metadata filtering & optional reranking
@@ -39,7 +39,7 @@ flowchart TB
 
     subgraph CORE["src/ modules"]
         CONFIG["config.py ✅"]
-        CHUNK["chunking/parent_child.py ✅"]
+        CHUNK["chunking/ ✅"]
         EMBED["embedding/embed.py ✅"]
         CACHE["caching/ 🔲"]
         RET["retrieval/ ✅"]
@@ -133,7 +133,7 @@ flowchart TD
 
     subgraph CHUNKING["Chunking"]
         J --> K["Load doc"]
-        K --> L["Parent-child split"]
+        K --> L["Configurable split (Recursive/Parent-Child)"]
         L --> M["Compute SHA256 Hash"]
     end
 
@@ -148,11 +148,12 @@ flowchart TD
     S --> T["Return: Success"]
 ```
 
-**Implemented in:** `api/ingestion/route.py`, `src/chunking/parent_child.py`, `src/embedding/embed.py`
+**Implemented in:** `api/ingestion/route.py`, `src/chunking/` (both strategies), `src/embedding/embed.py`
 
 ### Chunking Details
 | Parameter | Default |
 |-----------|---------|
+| Strategy | parent_child (or recursive_character) |
 | Parent chunk size | 1000 |
 | Parent chunk overlap | 200 |
 | Child chunk size | 200 |
@@ -212,7 +213,7 @@ erDiagram
         string _id PK
         string document_id FK
         string chunk_text
-        string parent_id
+        string parent_id (optional)
         string source
         int page
         string source_hash_value
@@ -242,7 +243,7 @@ erDiagram
 | `api/auth/` | ✅ Implemented |
 | `api/ingestion/` | ✅ Document versioning implemented |
 | `src/config.py` | ✅ MongoDB, Pinecone, JWT config |
-| `src/chunking/` | ✅ Parent-child implemented |
+| `src/chunking/` | ✅ Configurable (Recursive/Parent-Child) |
 | `src/embedding/` | ✅ Pinecone management |
 | `src/retrieval/` | ✅ Filtering & Reranking implemented |
 | `src/generation/` | ✅ Groq integration |
