@@ -1,4 +1,4 @@
-# Architecture Document
+# TierRAG Architecture Document
 
 ## Overview
 
@@ -12,6 +12,7 @@ This project implements a Retrieval-Augmented Generation (RAG) system with:
 - ✅ Multi-tier caching (Exact, Semantic, Retrieval) with in-memory dictionaries
 - ✅ Retrieval with metadata filtering & optional reranking
 - ✅ LLM-based answer generation
+- ✅ End-to-end tracing and observability (LangSmith)
 
 ---
 
@@ -23,7 +24,7 @@ This diagram outlines the complete query and retrieval flow, explicitly highligh
 flowchart TD
     %% Entities
     Client["Client / Swagger UI"]
-    API["POST /query"]
+    API["POST /query\n(Traced)"]
     
     %% Caches
     Tier1["Tier 1 Cache: Exact\n(In-Memory Dict)"]
@@ -36,6 +37,7 @@ flowchart TD
     Reranker["Reranker\n(bge-reranker-v2-m3)"]
     LLM["LLM Generation\n(Groq: llama-3.3-70b)"]
     Response["QueryResponse"]
+    LangSmith["LangSmith\n(Observability/Tracing)"]
 
     %% Flow
     Client --> API
@@ -61,6 +63,11 @@ flowchart TD
     %% Populate Caches (backflow)
     Response -.->|Populate| Tier1
     Response -.->|Populate| Tier2
+
+    %% Tracing
+    API -.->|Traces| LangSmith
+    Pinecone -.->|Traces| LangSmith
+    LLM -.->|Traces| LangSmith
 ```
 
 ---
@@ -146,9 +153,5 @@ The multi-tier caching system intercepts redundant queries to minimize latency a
 
 ### Caching Backend: In-Memory Dictionary vs. Redis
 The caching backend was purposefully implemented using primitive Python in-memory dictionaries instead of a dedicated cache like Redis. 
-- **Reasoning:** Setting up and learning Redis for the first time was proving difficult under project time constraints. To ensure the multi-tier architecture functioned logically without getting blocked by DevOps or infrastructure hurdles, in-memory dictionaries were chosen as an immediate, practical abstraction.
-- **Trade-off:** While extremely fast, the dictionaries are volatile (wiped entirely on server restart), do not scale or sync across multiple unified worker instances (e.g., Gunicorn workers), and lack built-in memory management (TTL/LRU logic must be built manually). 
-
-### Cache Warming and Cold Starts
-- **Handling:** There is no preemptive cache warming. The system starts completely "cold".
-- **Trade-off:** The very first time a unique topic is queried, it will incur the maximum latency of the full pipeline (Vector DB fetch + Reranking + LLM Generation). From that point onward, the caches organically warm themselves up passively based on sequential user activity.
+- **Reasoning:** Setting up and learning Redis for the first time was proving difficult under project time constraints. To ensure the architecture functioned logically without getting blocked by learning time constraints, in-memory dictionaries were chosen as an immediate, practical solution to solidify the core logic of the system.
+- **Trade-off:** While extremely fast, the dictionaries are volatile (wiped entirely on server restart), do not scale and lack built-in memory management. 

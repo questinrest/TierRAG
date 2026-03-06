@@ -10,6 +10,7 @@ Key capabilities include:
 - **Document Versioning:** Automatically manages active vs. archived versions of documents in MongoDB so overlapping document uploads don't pollute the vector space.
 - **Namespace Isolation:** Enforces secure, per-user data isolation in Pinecone via JWT-based authentication.
 - **Reranking & Generation:** Utilizes cross-encoder reranking (`bge-reranker-v2-m3`) and Groq's high-speed inference API (`llama-3.3-70b-versatile`) for highly accurate context generation.
+- **Deep Observability:** Integrated with **LangSmith** to trace chunking, embedding, vector retrieval, and LLM generative logic at a granular level.
 
 For a deep dive into the system's architecture, flow diagrams, and design decisions, see the [Architecture Document](docs/architecture.md).
 
@@ -61,6 +62,12 @@ PINECONE_API_KEY="your_pinecone_api_key_here"
 
 # LLM Generation (Groq)
 GROQ_API_KEY="your_groq_api_key_here"
+
+# Observability (LangSmith)
+LANGCHAIN_TRACING_V2="true"
+LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+LANGCHAIN_API_KEY="your_langsmith_api_key_here"
+LANGCHAIN_PROJECT="TierRAG"
 ```
 
 *(Note: Chunking parameters, cache thresholds, and model selections are further configurable in `src/config.py`)*

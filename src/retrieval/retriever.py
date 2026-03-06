@@ -1,6 +1,7 @@
 from typing import List, Dict
 from src.embedding.embed import INDEX
 from src.config import TOP_K, document_collection
+from langsmith import traceable
 
 
 def get_active_document_ids(namespace: str) -> List[str]:
@@ -11,6 +12,7 @@ def get_active_document_ids(namespace: str) -> List[str]:
     return [doc["document_id"] for doc in active_docs]
 
 
+@traceable(run_type="retriever", name="Standard Pinecone Retrieval")
 def search_vector_db(
     namespace: str,
     query: str,

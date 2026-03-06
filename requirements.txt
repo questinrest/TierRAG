@@ -17,3 +17,4 @@ certifi
 langchain-groq
 sentence-transformers
 numpy
+langsmith

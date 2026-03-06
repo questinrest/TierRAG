@@ -4,11 +4,13 @@ from typing import List, Dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_community.document_loaders import PyMuPDFLoader, TextLoader
+from langsmith import traceable
 from src.config import CHUNK_SIZE, CHUNK_OVERLAP
 from .parent_child import compute_file_hash, document_loader
 
 
 ## splitter 
+@traceable(run_type="chain", name="Recursive Character Splitter")
 def splitter(
     documents: List[Document],
     chunk_size: int,

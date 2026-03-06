@@ -11,7 +11,7 @@ load_dotenv()
 # MongoDB
 CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 client = MongoClient(CONNECTION_STRING, tlsCAFile=certifi.where())
-DATABASE_NAME = "devRAG"
+DATABASE_NAME = "TierRAG"
 db = client[DATABASE_NAME]
 login_collection = db['devlogins']
 document_collection = db['document_collection']
@@ -27,7 +27,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 PINECONE_API_KEY : str = os.getenv("PINECONE_API_KEY")
 PINECONE_CLOUD : str = os.getenv("PINECONE_CLOUD", "aws")
 PINECONE_REGION : str = os.getenv("PINECONE_REGION", "us-east-1")
-PINECONE_INDEX_NAME : str = os.getenv("PINECONE_INDEX_NAME", "devrag")
+PINECONE_INDEX_NAME : str = os.getenv("PINECONE_INDEX_NAME", "tierrag")
 PINECONE_EMBEDDING_MODEL : str = os.getenv("PINECONE_EMBEDDING_MODEL", "llama-text-embed-v2")
 PINECONE_RERANKER_MODEL : str = os.getenv("PINECONE_RERANKER_MODEL", "bge-reranker-v2-m3")
 BATCH_SIZE : int = int(os.getenv("BATCH_SIZE", 96))
@@ -39,7 +39,7 @@ TOP_N : int = int(os.getenv("TOP_N", 5))
 
 # Chunking Strategy
 # choose from : "recursive_character", "parent_child"
-CHUNKING_STRATEGY : str = os.getenv("CHUNKING_STRATEGY", "recursive_character")
+CHUNKING_STRATEGY : str = os.getenv("CHUNKING_STRATEGY", "parent_child")
 
 # Parent Child Chunking
 PARENT_CHUNK_SIZE : int = int(os.getenv("PARENT_CHUNK_SIZE", 1000))
