@@ -1,117 +1,108 @@
-# devRAG — Retrieval-Augmented Generation System
+# TierRAG - Multi-Tiered Retrieval-Augmented Generation System
 
-A modular RAG system built with **FastAPI**, **MongoDB Atlas**, and **Pinecone** that supports user-authenticated document ingestion with configurable chunking strategies (Parent-Child & Recursive Character) and automated version control.
+## Brief Description
 
-## Architecture
+**TierRAG** is a modular, high-performance Retrieval-Augmented Generation (RAG) system built with **FastAPI**, **MongoDB Atlas**, and **Pinecone**. It is designed to handle user-authenticated document ingestion, multi-tier intelligent caching, and configurable chunking strategies.
 
-```mermaid
-flowchart TB
-    subgraph CLIENT["Client"]
-        SW["Swagger UI / Frontend"]
-    end
+Key capabilities include:
+- **Multi-Tier Caching:** Implements an in-memory 3-tier cache (Exact, Semantic, and Retrieval) to aggressively minimize latency and LLM API costs.
+- **Advanced Chunking:** Supports both simple Recursive Character chunking and relationship-preserving Parent-Child chunking.
+- **Document Versioning:** Automatically manages active vs. archived versions of documents in MongoDB so overlapping document uploads don't pollute the vector space.
+- **Namespace Isolation:** Enforces secure, per-user data isolation in Pinecone via JWT-based authentication.
+- **Reranking & Generation:** Utilizes cross-encoder reranking (`bge-reranker-v2-m3`) and Groq's high-speed inference API (`llama-3.3-70b-versatile`) for highly accurate context generation.
 
-    subgraph API["FastAPI Application"]
-        MAIN["main.py"]
-        subgraph AUTH["api/auth ✅"]
-            REG["POST /api/admin/register"]
-            LOGIN["POST /api/admin/login"]
-        end
-        subgraph INGEST["api/ingestion ✅"]
-            UPLOAD["POST /upload"]
-        end
-        subgraph QUERY["api/generation ✅"]
-            QRY["POST /query"]
-        end
-    end
+For a deep dive into the system's architecture, flow diagrams, and design decisions, see the [Architecture Document](docs/architecture.md).
 
-    subgraph CORE["src/ modules"]
-        CONFIG["config.py ✅"]
-        CHUNK["chunking/ ✅"]
-        EMBED["embedding/embed.py ✅"]
-        CACHE["caching/ 🔲"]
-        RET["retrieval/ ✅"]
-        GEN["generation/ ✅"]
-    end
+---
 
-    subgraph STORAGE["External Storage"]
-        MONGO[("MongoDB Atlas")]
-        PINE[("Pinecone")]
-        REDIS[("Redis 🔲")]
-        LLM["LLM API ✅"]
-    end
+## Setup Instructions
 
-    SW --> MAIN
-    MAIN --> AUTH
-    MAIN --> INGEST
-    MAIN --> QUERY
+### 1. Prerequisites
+- Python 3.9+
+- A MongoDB Atlas cluster (or local MongoDB string)
+- A Pinecone account (API Key)
+- A Groq account (API Key for LLM generation)
 
-    REG --> CONFIG
-    LOGIN --> CONFIG
-    CONFIG --> MONGO
-
-    UPLOAD --> CHUNK
-    CHUNK --> EMBED
-    EMBED --> MONGO
-    EMBED --> PINE
-
-    QRY --> CACHE
-    CACHE --> RET
-    RET --> MONGO
-    RET --> PINE
-    RET --> GEN
-    GEN --> LLM
+### 2. Clone the Repository
+```bash
+git clone <your-repo-url>
+cd rag-project-2
 ```
 
-## Features
+### 3. Virtual Environment & Dependencies
+Create and activate a virtual environment, then install the required Python packages:
+```bash
+python -m venv .venv
+# On Windows:
+.venv\Scripts\activate
+# On macOS/Linux:
+source .venv/bin/activate
 
-| Feature | Status |
-|---------|--------|
-| User registration & login (MongoDB) | ✅ |
-| JWT authentication (HTTPBearer) | ✅ |
-| File upload (PDF, TXT) | ✅ |
-| Configurable document chunking (Recursive/Parent-Child) | ✅ |
-| **Document Versioning & Archiving** | ✅ |
-| Pinecone vector upsert with metadata filtering | ✅ |
-| Duplicate document detection (SHA256) | ✅ |
-| Retrieval with MongoDB active document filtering & optional Pinecone reranking | ✅ |
-| LLM-based answer generation (Groq) | ✅ |
+pip install -r requirements.txt
+```
 
-## Tech Stack
+### 4. Environment Configuration
+Copy the `.env.example` file to create your own configuration file:
+```bash
+cp .env.example .env
+```
 
-- **API**: FastAPI + Uvicorn
-- **Auth**: JWT (python-jose) + bcrypt
-- **Database**: MongoDB Atlas (pymongo) — *Tracks users & document versions*
-- **Vector Store**: Pinecone (llama-text-embed-v2) — *Tagged with version IDs*
-- **Chunking**: LangChain RecursiveCharacterTextSplitter
-- **Generation**: Groq (Llama 3.3 70B)
+Open `.env` and configure your credentials:
+```env
+# MongoDB Connection (Make sure to whitelist your IP in Atlas)
+CONNECTION_STRING="mongodb+srv://<user>:<password>@cluster0...mongodb.net/"
 
-## Quick Start
+# Auth Configuration
+SECRET_KEY="your_secure_randomly_generated_jwt_secret"
+ALGORITHM="HS256"
 
-1. **Clone & install**: `git clone <repo-url> && pip install -r requirements.txt`
-2. **Configure environment**: Copy `.env.example` to `.env` and fill in `CONNECTION_STRING`, `PINECONE_API_KEY`, and `GROQ_API_KEY`.
-3. **Run**: `uvicorn main:app --reload`
-4. **Test**: Open `http://localhost:8000/docs`
+# Vector Database (Pinecone)
+PINECONE_API_KEY="your_pinecone_api_key_here"
 
-### How to Test Document Versioning:
-1. **Upload a file** (e.g., `resume.pdf`).
-2. **Query it** to see the results.
-3. **Modify the file** locally and **upload it again** with the same filename.
-4. **Query again** — the system will automatically fetch results only from the *new* version, while the old version is preserved (but ignored) in the background.
+# LLM Generation (Groq)
+GROQ_API_KEY="your_groq_api_key_here"
+```
+
+*(Note: Chunking parameters, cache thresholds, and model selections are further configurable in `src/config.py`)*
+
+---
+
+## How to Run
+
+1. **Start the FastAPI Server:**
+Ensure your virtual environment is activated, then run the application using Uvicorn:
+```bash
+uvicorn main:app --reload
+```
+
+2. **Access the API Documentation:**
+Once the server is running, open your browser and navigate to the interactive Swagger UI:
+👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+3. **General Usage Flow Testing:**
+   - **Register & Login:** Use `POST /api/admin/register` then `POST /api/admin/login` to get a JWT Bearer token.
+   - **Authorize Context:** Click the "Authorize" button in Swagger UI and paste the Bearer token.
+   - **Upload Data:** Use `POST /upload` to upload a `.pdf` or `.txt` file.
+   - **Query:** Use `POST /query` to ask questions about your uploaded documents and see the multi-tier caching in action!
+
+---
 
 ## Project Structure
 
 ```
 ├── main.py                  # FastAPI app entrypoint
+├── requirements.txt         # Project dependencies
 ├── api/
-│   ├── auth/                # Registration & login
+│   ├── auth/                # JWT Registration & login
 │   ├── ingestion/           # Versioned document upload
-│   └── generation/          # Query & Answer generation
+│   └── generation/          # Query & Answer generation (Caching integration)
 ├── src/
-│   ├── config.py            # MongoDB & Pinecone setup
-│   ├── chunking/            # Configurable splitting logic (Parent-Child / Recursive Character)
-│   ├── embedding/           # Pinecone indexing
-│   ├── retrieval/           # MongoDB active doc filtering & Pinecone Reranking
-│   └── generation/          # Groq LLM integration
+│   ├── config.py            # Global Config (MongoDB, Pinecone, Chunking, Cache Thresholds)
+│   ├── chunking/            # Splitting logic (Parent-Child & Recursive Character)
+│   ├── embedding/           # Pinecone vectorization and indexing
+│   ├── retrieval/           # Active doc filtering & Reranking
+│   ├── generation/          # Groq LLM integration
+│   └── caching/             # 3-Tier In-Memory Dictionary Caches (Exact, Semantic, Retrieval)
 └── docs/
-    └── architecture.md      # Detailed diagrams & flowcharts
+    └── architecture.md      # Detailed diagrams & design decisions
 ```

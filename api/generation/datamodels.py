@@ -16,3 +16,4 @@ class QueryResponse(BaseModel):
     answer: str
     reference: List[Source]
     rerank: bool
+    cache_tier: Optional[str] = None

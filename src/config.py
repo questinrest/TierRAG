@@ -38,7 +38,7 @@ TOP_N : int = int(os.getenv("TOP_N", 5))
 
 
 # Chunking Strategy
-# Options: "recursive_character", "parent_child"
+# choose from : "recursive_character", "parent_child"
 CHUNKING_STRATEGY : str = os.getenv("CHUNKING_STRATEGY", "recursive_character")
 
 # Parent Child Chunking
@@ -57,3 +57,8 @@ GROQ_API_KEY : str = os.getenv("GROQ_API_KEY")
 OPENAI_MODEL_GROQ : str = os.getenv("OPENAI_MODEL_GROQ", "llama-3.3-70b-versatile")
 TEMPERATURE : float = float(os.getenv("TEMPERATURE", 0.2))
 MAX_TOKENS : int = int(os.getenv("MAX_TOKENS", 1024))
+
+
+# CACHE Settings
+SEMANTIC_CACHE_THRESHOLD : float = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.92"))
+RETRIEVAL_CACHE_THRESHOLD: float = float(os.getenv("RETRIEVAL_CACHE_THRESHOLD", "0.85"))

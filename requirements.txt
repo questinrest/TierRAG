@@ -15,3 +15,5 @@ ipykernel
 python-multipart
 certifi
 langchain-groq
+sentence-transformers
+numpy

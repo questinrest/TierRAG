@@ -83,7 +83,6 @@ def upsert_chunks(
             "document_id": document_id
         }
 
-        # Pinecone does not accept null variables in metadata
         record = {k: v for k, v in record.items() if v is not None}
         records.append(record)
 

@@ -12,6 +12,9 @@ from src.chunking.recursive_character import ingest as recursive_character_inges
 from src.config import document_collection, CHUNKING_STRATEGY
 from pathlib import Path
 import shutil
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -28,6 +31,7 @@ async def upload_document(
     suffix = Path(file.filename).suffix.lower()
 
     if suffix not in allowed_types:
+        logger.warning(f"Upload failed: Unsupported file type '{suffix}' from user '{username}'")
         raise HTTPException(
             status_code=400,
             detail="Unsupported file type"
@@ -39,6 +43,7 @@ async def upload_document(
         shutil.copyfileobj(file.file, buffer)
 
     namespace = username
+    logger.info(f"User '{username}' started processing file: {file.filename} with strategy: {CHUNKING_STRATEGY}")
 
     # Run chunking based on strategy
     if CHUNKING_STRATEGY == "recursive_character":
@@ -56,6 +61,7 @@ async def upload_document(
 
     if existing_doc:
         if existing_doc["source_hash"] == source_hash:
+            logger.info(f"Skipping upload: Document '{file.filename}' for user '{username}' is already up to date.")
             return {
                 "message": "Document already up to date",
                 "file": file.filename,
@@ -63,6 +69,7 @@ async def upload_document(
                 "namespace": namespace
             }
         
+        logger.info(f"New version detected for '{file.filename}'. Archiving old version (ID: {existing_doc['document_id']}).")
         # Mark old version as inactive
         document_collection.update_one(
             {"_id": existing_doc["_id"]},
@@ -71,6 +78,7 @@ async def upload_document(
 
     # Create new document record
     document_id = str(uuid.uuid4())
+    logger.info(f"Generating new document ID: {document_id}")
     doc_record = {
         "document_id": document_id,
         "namespace": namespace,
@@ -82,7 +90,10 @@ async def upload_document(
     document_collection.insert_one(doc_record)
 
     # Upsert with document_id
+    logger.info(f"Upserting {len(records)} chunks into Pinecone namespace '{namespace}'")
     inserted = upsert_chunks(records, namespace, document_id)
+    
+    logger.info(f"Successfully processed and embedded '{file.filename}' for user '{username}'.")
 
     return {
         "message": "Document uploaded and indexed successfully",
